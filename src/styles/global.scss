@@ -1,0 +1,113 @@
+@use "./variable.scss" as *;
+
+body {
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+*,
+html {
+  box-sizing: border-box;
+}
+
+/* global padding */
+.slef-padding-left {
+  padding-left: $spacing;
+}
+
+.slef-padding-right {
+  padding-right: $spacing;
+}
+
+.slef-padding-top {
+  padding-top: $spacing;
+}
+
+.slef-padding-bottom {
+  padding-bottom: $spacing;
+}
+
+.slef-padding {
+  padding: $spacing;
+}
+
+/* global margin */
+.slef-margin-left {
+  margin-left: $spacing;
+}
+
+.slef-margin-right {
+  margin-right: $spacing;
+}
+
+.slef-margin-top {
+  margin-top: $spacing;
+}
+
+.slef-margin-bottom {
+  margin-bottom: $spacing;
+}
+
+.slef-margin {
+  margin: $spacing;
+}
+
+/* global font color */
+.text-color-title {
+  color: $fontTitleColor;
+}
+.text-color-primary {
+  color: $primaryColor;
+}
+.text-color-success {
+  color: $successColor;
+}
+.text-color-waring {
+  color: $waringColor;
+}
+.text-color-danger {
+  color: $dangerColor;
+}
+.text-color-error {
+  color: $errorColor;
+}
+
+.text-blod {
+  font-weight: 600;
+}
+
+.font-size {
+  font-size: $fontSize;
+}
+
+/* flex */
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.postion-relative {
+  position: relative;
+}
+
+.text-hover {
+  cursor: pointer;
+  &:hover {
+    opacity: 0.8;
+  }
+}

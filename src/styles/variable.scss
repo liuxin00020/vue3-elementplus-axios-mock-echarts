@@ -1,0 +1,43 @@
+/* common color */
+$bgColor: #0a2559;
+$overlayBgColor: #173376;
+$dialogBgColor: #071a3d;
+$headerFontColor: #ebfeff;
+$fontColor: #ffffff;
+$fontTitleColor: #c7f2f9;
+$fontHoverColor: #ebfeff;
+$fontBlueColor: #1c44a0;
+$grayColor: #dddddd;
+$borderColor: #173376;
+$borderLightColor: #20459c;
+
+/* common font size */
+$fontSize: 16px;
+$fontSizeSmall: 14px;
+$fontSizeMini: 12px;
+$fontSizeLarge: 18px;
+$fontSizeTitle: 20px;
+$fontSizeValue: 24px;
+
+/* common space */
+$spacing: 20px;
+$spacingSmall: 15px;
+$spacingMini: 10px;
+$spacingMinis: 5px;
+$spacingLarge: 25px;
+$spacingLarger: 30px;
+$spacingLargerb: 40px;
+$border: 1px;
+$borderBlod: 2px;
+
+/* common status color */
+$primaryColor: #0e4bd0; // 58 124 255
+$primaryColor-light-1: rgba($primaryColor, 10%);
+$primaryColor-light-3: rgba($primaryColor, 30%);
+$primaryColor-light-5: rgba($primaryColor, 50%);
+$primaryColor-light-7: rgba($primaryColor, 70%);
+$primaryColor-light-9: rgba($primaryColor, 90%);
+$successColor: #43a047;
+$waringColor: #ffe57f;
+$dangerColor: #ef6c00;
+$errorColor: #d6360b;

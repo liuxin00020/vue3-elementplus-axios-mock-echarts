@@ -1,0 +1,41 @@
+@use "./variable.scss" as *;
+
+@forward "element-plus/theme-chalk/src/dark/var.scss" with (
+  $colors: (
+    "primary": (
+      "base": $primaryColor,
+    ),
+    "success": (
+      "base": $successColor,
+    ),
+    "waring": (
+      "base": $waringColor,
+    ),
+    "danger": (
+      "base": $dangerColor,
+    ),
+    "error": (
+      "base": $errorColor,
+    ),
+    "info": (
+      "base": $fontColor,
+    ),
+  ),
+  $bg-color: (
+    "": $dialogBgColor,
+    "page": $overlayBgColor,
+    "overlay": $overlayBgColor,
+  ),
+  $text-color: (
+    "regular": $headerFontColor,
+    "secondary": $fontTitleColor,
+  ),
+  $border-color: (
+    "": $borderColor,
+    // "light": $borderLightColor,
+    // "lighter": $primaryColor-light-7,
+    // "extra-light": $primaryColor-light-9,
+    // "dark": $primaryColor-light-5,
+    // "darker": $primaryColor-light-3,
+  ),
+);
