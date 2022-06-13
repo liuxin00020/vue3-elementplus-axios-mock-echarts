@@ -2,7 +2,7 @@
  * @Author: liuxin
  * @Date: 2022-06-01 14:49:35
  * @LastEditors: liuxin
- * @LastEditTime: 2022-06-10 16:33:08
+ * @LastEditTime: 2022-06-13 11:04:05
  * @Description: 
 -->
 <template>
@@ -10,6 +10,7 @@
     <el-header class="bg-header">
       <nav>
         <router-link to="/">Home</router-link>
+        <router-link to="/echartsView">EchartsView</router-link>
         <router-link to="/about">About</router-link>
       </nav>
     </el-header>

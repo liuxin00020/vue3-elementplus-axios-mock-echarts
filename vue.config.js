@@ -2,7 +2,7 @@
  * @Author: liuxin
  * @Date: 2022-06-01 14:49:35
  * @LastEditors: liuxin
- * @LastEditTime: 2022-06-10 14:22:42
+ * @LastEditTime: 2022-06-13 15:59:19
  * @Description: 
  */
 const { defineConfig } = require('@vue/cli-service')
@@ -13,7 +13,7 @@ module.exports = defineConfig({
   transpileDependencies: true,
   publicPath: "./", // 公共路径，这样设置，打包后的index.html才可以打开
   productionSourceMap: false, // 打包后不要映射文件
-  lintOnSave: true, // 保存时，使用eslint，不想用则置为false
+  lintOnSave: false, // 保存时，使用eslint，不想用则置为false
   devServer: {
     host: "localhost", // 解决自动打开0.0.0.0
     port: 9090, // 端口
