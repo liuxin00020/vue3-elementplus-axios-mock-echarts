@@ -2,7 +2,7 @@
  * @Author: liuxin
  * @Date: 2022-06-01 14:49:35
  * @LastEditors: liuxin
- * @LastEditTime: 2022-06-13 11:04:05
+ * @LastEditTime: 2022-10-25 13:38:45
  * @Description: 
 -->
 <template>
@@ -11,7 +11,7 @@
       <nav>
         <router-link to="/">Home</router-link>
         <router-link to="/echartsView">EchartsView</router-link>
-        <router-link to="/about">About</router-link>
+        <router-link to="/flvView">flvView</router-link>
       </nav>
     </el-header>
     <el-main><router-view /></el-main>

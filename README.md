@@ -2,10 +2,10 @@
  * @Author: liuxin
  * @Date: 2022-06-01 14:49:51
  * @LastEditors: liuxin
- * @LastEditTime: 2022-06-13 16:38:50
+ * @LastEditTime: 2022-06-16 13:44:15
  * @Description: 
 -->
-# vue3-elementplus-mock-echarts
+# tids-config
 
 ## Project setup
 ```
