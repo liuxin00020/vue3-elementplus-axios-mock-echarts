@@ -2,46 +2,56 @@
  * @Author: liuxin
  * @Date: 2022-05-19 13:59:30
  * @LastEditors: liuxin
- * @LastEditTime: 2022-10-27 11:47:04
+ * @LastEditTime: 2023-01-13 15:50:18
  * @Description: 视频播放器
 -->
 <template >
   <div
-    v-if="url && errorCount <= maxReconnectCount"
+    v-loading="loading"
+    element-loading-text="Loading..."
     class="video-div"
     :class="isFlullscreen ? 'video-fullscreen' : ''"
   >
+    <span v-if="cameraName" class="camera-name">{{ cameraName }}</span>
     <video
+      ref="flvPlayerVideo"
       muted
       autoplay
       width="100%"
       height="100%"
-      ref="flvPlayerVideo"
       class="flv-video"
     >
       <div>浏览器不支持video</div>
     </video>
     <!-- 退出全屏 / 全屏 -->
-    <span class="fullscreen-span">
+    <span
+      class="fullscreen-span"
+      v-show="url && errorCount <= maxReconnectCount"
+    >
       <IconFont
         class="fullscreen-icon"
         :type="isFlullscreen ? 'icon-tuichuquanping' : 'icon-a-9Equanping'"
         @click="fullscreenHandle"
       />
     </span>
+
+    <!-- 无播放源提示 -->
+    <Empty
+      v-if="!url"
+      icon="iconshipinjiazaishibai"
+      class="flv-refresh"
+      text="暂无播放源"
+    />
+
+    <!-- 错误刷新提示 -->
+    <Empty
+      v-if="url && errorCount > maxReconnectCount"
+      class="flv-refresh"
+      icon="icon-icon"
+      text="已播完或者出错了，点击我刷新"
+      @click="faultRefresh"
+    />
   </div>
-  <Empty
-    v-else-if="!url"
-    icon="iconshipinjiazaishibai"
-    text="暂无播放源"
-  />
-  <Empty
-    v-else
-    class="flv-refresh"
-    icon="iconicon"
-    text="出错了，点击我刷新"
-    @click="faultRefresh"
-  />
 </template>
 
 <script>
@@ -53,21 +63,19 @@
  *              type: "flv", // 视频类型  flv/mp4
                 isLive: true, // 是否实时流
               }
- * @param {Boolean} flvLoading 用于加载loading  默认false
- * @param {Boolean} isOpen  推流是否已经打开，已经打开，则不用延时 默认false
+ * @param {Boolean} flvReload  用于判断是否重连，地址相同的情况下才用重连
+ * @param {Boolean} isBufferedEnd  是否追帧和跳帧，默认true  异常视频不需要
  * @return {*}
  * @example 
  *      <div
           class="video-item"
-          v-loading="item.loading"
-          element-loading-text="Loading..."
         >
-          <!-- 实时视频 -->
-          <FlvVideo
-            :url="item.stream_url"
-            class="flv-video"
-            v-model:flvLoading="item.loading"
-          />
+        <FlvVideo
+          :url="stream_url"
+          class="station-video-flv"
+          v-model:flvReload="flvReload"
+          @faultRefresh="videoRefresh(item)"
+        />
         </div>
  * @Author: liuxin
  */
@@ -79,6 +87,10 @@ export default {
     Empty,
   },
   props: {
+    cameraName: {
+      type: String,
+      default: "",
+    },
     url: {
       type: String,
       default: "",
@@ -93,15 +105,21 @@ export default {
       },
     },
 
-    flvLoading: {
+    flvReload: {
       type: Boolean,
       default: false,
+    },
+
+    // 是否追帧和跳帧，默认需要
+    isBufferedEnd: {
+      type: Boolean,
+      default: true,
     },
   },
   setup(prop, ctx) {
     const flvPlayerVideo = ref(null);
     const state = reactive({
-      loading: true,
+      loading: true, // 加载动画
       flvPlayer: null,
       delayTimer: null,
 
@@ -114,9 +132,10 @@ export default {
     });
 
     onMounted(() => {
-      // 如果有地址，则直接构建视频
       if (prop.url) {
-        flvInitLoad();
+        flvInitLoad(); // 如果有地址，则直接构建视频
+      } else {
+        state.loading = false; // 没有地址，则去掉loading
       }
     });
 
@@ -125,33 +144,26 @@ export default {
     });
 
     watch(
-      () => [prop.url, state.loading, prop.flvLoading],
-      (newValue, oldValue) => {
-        const _url = newValue[0],
-          _urlOld = oldValue[0],
-          _loading = newValue[1],
-          _loadingOld = oldValue[1],
-          _flvLoading = newValue[2];
+      () => [prop.url, prop.flvReload],
+      ([newUrl, newflvReload], [oldUrl, oldflvReload]) => {
+        console.log("视频播放组件", newUrl, oldflvReload, newflvReload);
         // url为空
-        if (!_url) {
+        if (!newUrl) {
           state.loading = false;
           addLog(`address changing, empty address`);
           flvDestory();
         }
         // url改变了
-        else if (_url != _urlOld) {
-          addLog(`address changing,Old address:${_urlOld},New address:${_url}`);
-          flvInitLoad();
-        }
+        // else if (newUrl != oldurl) {
+        //   addLog(
+        //     `address changing,Old address:${oldurl},New address:${newUrl}`
+        //   );
+        //   flvInitLoad();
+        // }
         // 如果传入的loading是true，并且url没有变化，则重新构建推流，因为后端是关闭了再打开的
-        else if (_flvLoading === true) {
-          // addLog(`_flvLoading:${_flvLoading}`);
-          ctx.emit("update:flvLoading", false); // 反馈给父组件的loading
-        }
-
-        if (_loading != _loadingOld) {
-          // addLog(`flv component loading:${_loading}`);
-          ctx.emit("update:flvLoading", _loading); // 反馈给父组件的loading
+        else if (newflvReload === true) {
+          flvInitLoad();
+          ctx.emit("update:flvReload", false);
         }
       }
     );
@@ -168,17 +180,16 @@ export default {
 
     /**
      * @description: 播放器初始化处理
-     * @param {*} handleLoading loading状态
      * @return {*}
      * @Author: liuxin
      */
-    function flvInitLoad(handleLoading = true) {
-      state.loading = handleLoading; // loading动画
+    function flvInitLoad() {
+      state.loading = true; // 添加加载动画
       state.errorCount = 0; // 错误连接次数置0
       flvDestory();
-      addLog(`flv init load,loading:${handleLoading},address:${prop.url}`);
+      addLog(`flv init load,loading:${state.loading},address:${prop.url}`);
       state.delayTimer = setTimeout(() => {
-        flvCreated();
+        flvCreated("flvInitLoad");
       }, Window.flvTimeOut); // 等待一会儿再打开，防止找不到元素，最好不要超过1000,，否则切换时，容易导致锁死
     }
 
@@ -218,7 +229,7 @@ export default {
           flvPlayerEvent(); // 断流、卡顿处理
         }
       } catch (error) {
-        console.error("构建错误");
+        console.error("构建错误", error);
       }
     }
 
@@ -228,9 +239,15 @@ export default {
      * @Author: liuxin
      */
     function flvDestory() {
-      if (state.flvPlayer == null) return;
+      if (state.delayTimer) {
+        clearTimeout(state.delayTimer); // 清除推迟打开播放器定时器
+      }
+      if (state.flvPlayer == null) return; // 空对象，不执行销毁
+
+      /* ----- 销毁开始 ----- */
       addLog(`flv destory,address:${prop.url}`);
       try {
+        state.flvPlayer.off(flvjs.Events.ERROR, errorHandle);
         if (state.flvPlayer._hasPendingLoad) {
           state.flvPlayer.pause();
           state.flvPlayer.unload();
@@ -238,7 +255,6 @@ export default {
         state.flvPlayer.detachMediaElement();
         state.flvPlayer.destroy();
         state.flvPlayer = null;
-        clearTimeout(state.delayTimer); // 清除推迟打开播放器定时器
       } catch (error) {
         console.error("销毁错误");
       }
@@ -260,56 +276,45 @@ export default {
        * @return {*}
        * @Author: liuxin
        */
-      videoElement.addEventListener("progress", () => {
-        if (state.flvPlayer.buffered.length) {
-          let end = state.flvPlayer.buffered.end(0); //获取当前时间值
-          let diff = end - state.flvPlayer.currentTime; //获取相差差值
-          // 延迟过大或帧率不正常，通过跳帧的方式更新视频
-          if (diff > 20 || diff < 0) {
-            // addLog(`Manual frame skipping,address:${prop.url}`); // 添加日志
-            state.flvPlayer.currentTime = state.flvPlayer.buffered.end(0) - 0.5; // 手动跳帧到最后
-            return;
-          }
-
-          // 正常帧率，正常播放
-          if (diff <= 1) {
-            videoElement.playbackRate = 1;
-          }
-          // 10秒内的延时，1.1倍速播放
-          else if (diff <= 10) {
-            // addLog(`Chase frames manually 1.1,address:${prop.url}`); // 手动追帧
-            videoElement.playbackRate = 1.1;
-          }
-          // 20秒内的延时，1.2倍速播放
-          else if (diff <= 20) {
-            // addLog(`Chase frames manually 1.2,address:${prop.url}`); // 手动追帧
-            videoElement.playbackRate = 1.2;
-          }
+      videoElement.onprogress = (e) => {
+        // 不需要跳帧，如：异常视频   或者没有数据流，则不进行跳帧
+        if (!prop.isBufferedEnd || state.flvPlayer.buffered.length <= 0) {
+          return;
         }
-      });
-
-      /**
-       * @description: 监听停止事件，如果是后端关闭了，再次打开，则需要重新构建，这里从上次打开开始计算，只重连一次
-       * @return {*}
-       * @Author: liuxin
-       */
-      videoElement.addEventListener("ended", () => {
-        state.loading = false; // 去掉loading动画
-        if (state.endedReloadFlag) {
-          addLog(`Video ended, reconnecting:${prop.url}`); // 日志
-          state.endedReloadFlag = false; // 停滞重载的标识，设置为false，目的是只重载一次，若无法播放，会进入error事件重载
-          flvInitLoad(false); // 销毁后重新构建，无loading动画，有延时播放
+        state.loading = false;
+        /* ----- 跳帧操作 ----- */
+        let end = state.flvPlayer.buffered.end(0); //获取当前时间值
+        let diff = end - state.flvPlayer.currentTime; //获取相差差值
+        // 延迟过大或帧率不正常，通过跳帧的方式更新视频
+        if (diff > 20 || diff < 0) {
+          // addLog(`Manual frame skipping,address:${prop.url}`); // 添加日志
+          state.flvPlayer.currentTime = state.flvPlayer.buffered.end(0) - 0.5; // 手动跳帧到最后
+          return;
         }
-      });
+        // 正常帧率，正常播放
+        if (diff <= 1) {
+          videoElement.playbackRate = 1;
+        }
+        // 10秒内的延时，1.1倍速播放
+        else if (diff <= 10) {
+          // addLog(`Chase frames manually 1.1,address:${prop.url}`); // 手动追帧
+          videoElement.playbackRate = 1.1;
+        }
+        // 20秒内的延时，1.2倍速播放
+        else if (diff <= 20) {
+          // addLog(`Chase frames manually 1.2,address:${prop.url}`); // 手动追帧
+          videoElement.playbackRate = 1.2;
+        }
+      };
 
       /**
        * @description: 监听点击事件，不执行暂停
        * @return {*}
        * @Author: liuxin
        */
-      videoElement.addEventListener("click", (e) => {
+      videoElement.onclick = (e) => {
         e.preventDefault();
-      });
+      };
     }
 
     /**
@@ -322,59 +327,66 @@ export default {
         return;
       }
 
-      /**
-       * @description: 监听出错消息后，销毁后重连
-       * @return {*}
-       * @Author: liuxin
-       */
-      state.flvPlayer.on(
-        flvjs.Events.ERROR,
-        (errorType, errorDetail, errorInfo) => {
-          //视频出错后销毁重新创建 网络错误
-          if (state.flvPlayer && state.errorCount <= state.maxReconnectCount) {
-            addLog(`Video error ${state.errorCount} reconnection,
-            address:${prop.url},
-            errorinfo:${JSON.stringify(errorInfo)}`); // 视频报错N重连
-            state.errorCount++;
-            flvDestory();
-            flvCreated();
-          }
+      state.flvPlayer.on(flvjs.Events.ERROR, errorHandle); // 监听出错消息后，销毁后重连
+      state.flvPlayer.on(flvjs.Events.LOADING_COMPLETE, errorHandle); // ctrl+f5刷新，会莫名因为停止end不播放
+      state.flvPlayer.on(flvjs.Events.STATISTICS_INFO, statisticsInfoHanle); // 断流重连
+    }
 
-          if (state.errorCount > state.maxReconnectCount) {
-            state.loading = false; // 去掉loading
-          }
-        }
-      );
+    /**
+     * @description: 错误回调事件
+     * @param {*} errorType
+     * @param {*} errorDetail
+     * @param {*} errorInfo
+     * @return {*}
+     * @Author: liuxin
+     */
+    function errorHandle() {
+      //视频出错后销毁重新创建 网络错误
+      if (state.flvPlayer && state.errorCount <= state.maxReconnectCount) {
+        addLog(`Video error ${state.errorCount} reconnection,
+            address:${prop.url}`); // 视频报错N重连
 
-      /**
-       * @description: 视频卡顿，销毁后重建
-       * @return {*}
-       * @Author: liuxin
-       */
-      state.flvPlayer.on("statistics_info", (res) => {
-        // 初始化播放
-        if (state.lastDecodedFrame == 0) {
-          state.lastDecodedFrame = res.decodedFrames;
-          return;
+        state.loading = true; // 添加loading动画
+        state.errorCount++; //错误重连次数+1
+        flvDestory();
+        flvCreated("ERROR");
+      }
+
+      if (state.errorCount > state.maxReconnectCount) {
+        state.loading = false; // 去掉loading
+      }
+    }
+
+    /**
+     * @description: 视频卡顿，销毁后重建
+     * @param {*} errorType
+     * @param {*} errorDetail
+     * @param {*} errorInfo
+     * @return {*}
+     * @Author: liuxin
+     */
+    function statisticsInfoHanle(res) {
+      // 初始化播放
+      if (state.lastDecodedFrame == 0) {
+        state.lastDecodedFrame = res.decodedFrames;
+        return;
+      }
+      // 正常播放
+      if (state.lastDecodedFrame != res.decodedFrames) {
+        state.lastDecodedFrame = res.decodedFrames;
+        state.loading = false; // 去掉loading动画
+        state.errorCount = 0; // 错误连接次数归0
+      }
+      // 播放异常
+      else {
+        if (state.player) {
+          addLog(`Reconnect after video freezes, address:${prop.url}`); // 添加日志
+          state.errorCount = 0; // 错误连接次数归0
+          state.lastDecodedFrame = 0; // 最后播放编码号
+          flvDestory(); // 销毁对象
+          flvCreated("statistics_info"); // 创建对象
         }
-        // 正常播放
-        if (state.lastDecodedFrame != res.decodedFrames) {
-          state.lastDecodedFrame = res.decodedFrames;
-          if ((state.loading = true)) {
-            state.loading = false; // 去掉loading
-          }
-        }
-        // 播放异常
-        else {
-          if (state.player) {
-            addLog(`Reconnect after video freezes, address:${prop.url}`); // 添加日志
-            state.errorCount = 0; // 错误连接次数归0
-            state.lastDecodedFrame = 0; // 最后播放编码号
-            flvDestory(); // 销毁对象
-            flvCreated(); // 创建对象
-          }
-        }
-      });
+      }
     }
 
     /**
@@ -386,7 +398,7 @@ export default {
     function addLog(log) {
       // console.log(log);
       // 发送消息给后端 存日志
-      // scoket.send(
+      // socket.send(
       //   JSON.stringify({
       //     api: "web_log",
       //     data: {
@@ -427,6 +439,8 @@ export default {
 <style lang="scss" scoped>
 .video-div {
   position: relative;
+  width: 100%;
+  height: 100%;
   &:hover {
     .fullscreen-span {
       display: block;
@@ -439,9 +453,9 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 9999;
+  z-index: 9999999;
   margin: 0;
-  background-color: black;
+  background: $bgColor;
   .fullscreen-icon {
     font-size: 30px;
   }
@@ -451,7 +465,7 @@ export default {
   display: block;
   width: 100%;
   padding: 1% 3%;
-  background: rgba(black, 0.5);
+  background: rgba($bgColor, 0.5);
   position: absolute;
   bottom: 0;
   display: none;
@@ -473,8 +487,14 @@ export default {
   height: 100%;
   @include flex-box(null, center, center);
   cursor: pointer;
+  @include position-absolute(0, null, null, 0);
   &:hover {
-    color: $primaryColor;
+    color: $fontHoverColor;
   }
+}
+
+.camera-name {
+  color: $dangerColor;
+  @include position-absolute(null, null, 10px, 10px);
 }
 </style>

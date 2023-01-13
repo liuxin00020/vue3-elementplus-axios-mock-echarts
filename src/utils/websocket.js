@@ -2,8 +2,8 @@
  * @Author: liuxin
  * @Date: 2022-07-19 17:20:09
  * @LastEditors: liuxin
- * @LastEditTime: 2022-10-27 15:08:52
- * @Description: 
+ * @LastEditTime: 2022-10-27 15:37:33
+ * @Description: websocket连接工具
  */
 import { ElMessage, ElLoading } from "element-plus";
 import "element-plus/es/components/message/style/css"
@@ -14,31 +14,31 @@ let relinkLoading = null;// 重连全屏loading
 
 /**
  * @description: 初始化websocket
- * @param {*} link url后更上的地址
+ * @param {*} linkUrl url的地址
  * @return {WebSocket} WebSocket对象
  * @Author: liuxin
  */
-function initWebSocket(link = "") {
+function initWebSocket(linkUrl = "") {
     // 正在连接或连接成功
     if (socket && (socket.readyState < 2)) {
         return socket;
     }
 
-    // 如果
-    if (link) {
-        Window.apiConfig[process.env.NODE_ENV].wsUrl = link;
+    // 如果地址由上层传递过来，则使用传递的地址
+    if (linkUrl) {
+        Window.apiConfig[process.env.NODE_ENV].wsUrl = linkUrl;
     }
     const url = Window.apiConfig[process.env.NODE_ENV].wsUrl;
-    socket = new WebSocket(url)//这里面的this都指向vue
-    socket.onerror = webSocketOnError;
-    socket.onclose = closeWebsocket;
-    socket.onopen = openWebsocket;
+    socket = new WebSocket(url) // 创建对象
+    socket.onerror = webSocketOnError; // 连接错误处理
+    socket.onclose = closeWebsocket; // 连接关闭处理
+    socket.onopen = openWebsocket; // 连接打开处理
     return socket;
 }
 
 /**
  * @description: 处理websocket返回的数据
- * @param {*} res 后端返回的数据
+ * @param {*} res 后端返回的数据 
  * @return {Object<JSON>} 
  * @Author: liuxin
  */
@@ -107,13 +107,13 @@ function openWebsocket() {
     }
 }
 
-// 
 /**
  * @description: 关闭websocket回调函数处理
  * @return {*}
  * @Author: liuxin
  */
 function closeWebsocket() {
+    // 连接关闭时，立刻开启重连机制
     if (linkFailCount < 3 && socket && (socket.readyState >= 2)) {
         // 开启重连加载动画
         relinkLoading = ElLoading.service({
